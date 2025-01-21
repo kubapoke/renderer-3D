@@ -64,6 +64,20 @@ public:
         return glm::lookAt(Position, Position + Front, Up);
     }
 
+    // sets camera position
+    void SetPosition(const glm::vec3& position)
+    {
+        Position = position;
+    }
+
+    // sets camera target
+    void SetTarget(const glm::vec3& target)
+    {
+        Front = glm::normalize(target - Position);
+        Right = glm::normalize(glm::cross(Front, WorldUp));
+        Up = glm::normalize(glm::cross(Right, Front));
+    }
+
     // processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
     void ProcessKeyboard(Camera_Movement direction, float deltaTime)
     {
