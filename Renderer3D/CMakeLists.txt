@@ -14,3 +14,7 @@ target_link_libraries(${PROJECT_NAME}
         ${CMAKE_SOURCE_DIR}/lib/libglfw3.a
         ${CMAKE_SOURCE_DIR}/lib/OpenGL32.Lib
 )
+
+add_custom_target(copy_assets
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_LIST_DIR}/assets ${CMAKE_CURRENT_BINARY_DIR}/assets
+)
