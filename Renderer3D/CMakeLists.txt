@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 include_directories(include external)
 
-file(GLOB_RECURSE SOURCES src/*.cpp src/*.c)
+file(GLOB_RECURSE SOURCES src/*.cpp src/*.c include/*.h)
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 
