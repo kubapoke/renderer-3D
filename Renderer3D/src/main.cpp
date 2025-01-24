@@ -8,6 +8,7 @@
 #include "Light.h"
 #include "Model.h"
 #include "PointLight.h"
+#include "Shape.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -20,14 +21,13 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
-unsigned int loadTexture(char const * path);
 
 // global constants
 const unsigned int SCR_WIDTH = 1200;
 const unsigned int SCR_HEIGHT = 900;
 
 // camera
-Camera freeCamera(glm::vec3(0.0f, 0.0f, 3.0f));
+Camera camera(glm::vec3(0.0f, 0.0f, 0.0f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -48,12 +48,25 @@ int main() {
 
     // set up entities
 
-    std::shared_ptr<Renderable> crabSpaceshipRenderable = std::make_shared<Model>("assets/models/spaceship_eav_2_crab/scene.gltf");
-    auto crabSpaceship = Entity(crabSpaceshipRenderable, glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(0.1f));
+    shared_ptr<Renderable> crabSpaceshipRenderable = std::make_shared<Model>("assets/models/spaceship_eav_2_crab/scene.gltf");
+    auto crabSpaceship = Entity(crabSpaceshipRenderable, glm::vec3(0.0f, 2.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.05f));
+
+    shared_ptr<Renderable> cubeRenderable = std::make_shared<Shape>(Shape::GetCube(
+            "assets/textures/container/diffuse.png",
+            "assets/textures/container/specular.png"
+    ));
+    auto cube = Entity(cubeRenderable, glm::vec3(0.0f, 0.5f, 0.0f));
+
+    shared_ptr<Renderable> planeRenderable = std::make_shared<Shape>(Shape::GetPlane(
+            "assets/textures/redstone/diffuse.png",
+            "",
+            "assets/textures/redstone/normal.png"
+    ));
+    auto plane = Entity(planeRenderable, glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1000.f));
 
     // set up lights
 
-    auto light = PointLight(glm::vec3(0.0f, 0.0f, 0.3f), glm::vec3(0.05f));
+    auto light = PointLight(glm::vec3(0.5f, 3.0f, 1.0f), glm::vec3(0.05f));
 
     // render loop
     while (!glfwWindowShouldClose(window))
@@ -70,12 +83,21 @@ int main() {
         glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        freeCamera.UpdateShader(baseShader, SCR_WIDTH, SCR_HEIGHT);
+        camera.UpdateShader(baseShader, SCR_WIDTH, SCR_HEIGHT);
         light.UpdateShader(baseShader);
 
         baseShader.setFloat("material.shininess", 32.0f);
 
+        float radius = 8.0f;
+        crabSpaceship.SetPosition(glm::vec3(glm::sin(glfwGetTime()) * radius, 2.0, glm::cos(glfwGetTime()) * radius));
+        crabSpaceship.SetRotation(glm::vec3 (0.0f, glfwGetTime(), 0.0f));
+
+        camera.SetTarget(glm::vec3(glm::sin(glfwGetTime()) * radius, 2.0, glm::cos(glfwGetTime()) * radius));
+        camera.SetPosition(glm::vec3(0.5f, 3.0f, 1.0f));
+
         crabSpaceship.Draw(baseShader);
+        cube.Draw(baseShader);
+        plane.Draw(baseShader);
 
         // swap buffers and poll IO events
         glfwSwapBuffers(window);
@@ -99,13 +121,13 @@ void processInput(GLFWwindow *window)
         glfwSetWindowShouldClose(window, true);
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        freeCamera.ProcessKeyboard(FORWARD, deltaTime);
+        camera.ProcessKeyboard(FORWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        freeCamera.ProcessKeyboard(BACKWARD, deltaTime);
+        camera.ProcessKeyboard(BACKWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        freeCamera.ProcessKeyboard(LEFT, deltaTime);
+        camera.ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        freeCamera.ProcessKeyboard(RIGHT, deltaTime);
+        camera.ProcessKeyboard(RIGHT, deltaTime);
 }
 
 // whenever the mouse moves, this callback is called
@@ -127,13 +149,13 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
     lastX = xpos;
     lastY = ypos;
 
-    freeCamera.ProcessMouseMovement(xoffset, yoffset);
+    camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
 // whenever the mouse scroll wheel scrolls, this callback is called
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
-    freeCamera.ProcessMouseScroll(static_cast<float>(yoffset));
+    camera.ProcessMouseScroll(static_cast<float>(yoffset));
 }
 
 // initialize window
@@ -170,42 +192,4 @@ GLFWwindow *initialize_window() {
     glEnable(GL_DEPTH_TEST);
 
     return window;
-}
-
-// utility function for loading a 2D texture from file
-unsigned int loadTexture(char const * path)
-{
-    unsigned int textureID;
-    glGenTextures(1, &textureID);
-
-    int width, height, nrComponents;
-    unsigned char *data = stbi_load(path, &width, &height, &nrComponents, 0);
-    if (data)
-    {
-        GLenum format;
-        if (nrComponents == 1)
-            format = GL_RED;
-        else if (nrComponents == 3)
-            format = GL_RGB;
-        else if (nrComponents == 4)
-            format = GL_RGBA;
-
-        glBindTexture(GL_TEXTURE_2D, textureID);
-        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, format == GL_RGBA ? GL_CLAMP_TO_EDGE : GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, format == GL_RGBA ? GL_CLAMP_TO_EDGE : GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        stbi_image_free(data);
-    }
-    else
-    {
-        std::cout << "Texture failed to load at path: " << path << std::endl;
-        stbi_image_free(data);
-    }
-
-    return textureID;
 }
