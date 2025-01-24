@@ -59,7 +59,7 @@ int main() {
 
     shared_ptr<Renderable> planeRenderable = std::make_shared<Shape>(Shape::GetPlane(
             "assets/textures/redstone/diffuse.png",
-            "",
+            "assets/textures/redstone/specular.png",
             "assets/textures/redstone/normal.png"
     ));
     auto plane = Entity(planeRenderable, glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1000.f));
@@ -92,8 +92,8 @@ int main() {
         crabSpaceship.SetPosition(glm::vec3(glm::sin(glfwGetTime()) * radius, 2.0, glm::cos(glfwGetTime()) * radius));
         crabSpaceship.SetRotation(glm::vec3 (0.0f, glfwGetTime(), 0.0f));
 
-        camera.SetTarget(glm::vec3(glm::sin(glfwGetTime()) * radius, 2.0, glm::cos(glfwGetTime()) * radius));
-        camera.SetPosition(glm::vec3(0.5f, 3.0f, 1.0f));
+        // camera.SetTarget(glm::vec3(glm::sin(glfwGetTime()) * radius, 2.0, glm::cos(glfwGetTime()) * radius));
+        // camera.SetPosition(glm::vec3(0.5f, 3.0f, 1.0f));
 
         crabSpaceship.Draw(baseShader);
         cube.Draw(baseShader);
