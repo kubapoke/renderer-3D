@@ -7,13 +7,14 @@ include_directories(include external)
 
 file(GLOB_RECURSE SOURCES src/*.cpp src/*.c include/*.h)
 
-add_executable(${PROJECT_NAME} ${SOURCES}
-        include/Entity.h)
+add_executable(${PROJECT_NAME} ${SOURCES})
 
 target_link_libraries(${PROJECT_NAME}
         PRIVATE
         ${CMAKE_SOURCE_DIR}/lib/libglfw3.a
         ${CMAKE_SOURCE_DIR}/lib/OpenGL32.Lib
+        ${CMAKE_SOURCE_DIR}/lib/libassimp.a
+        ${CMAKE_SOURCE_DIR}/lib/libz.a
 )
 
 add_custom_target(copy_assets

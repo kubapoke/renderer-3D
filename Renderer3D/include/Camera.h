@@ -58,12 +58,6 @@ public:
         updateCameraVectors();
     }
 
-    // returns the view matrix calculated using Euler Angles and the LookAt Matrix
-    glm::mat4 GetViewMatrix()
-    {
-        return glm::lookAt(Position, Position + Front, Up);
-    }
-
     // sets camera position
     void SetPosition(const glm::vec3& position)
     {
@@ -124,6 +118,15 @@ public:
             Zoom = 45.0f;
     }
 
+    void UpdateShader(Shader& shader, float screenWidth, float screenHeight)
+    {
+        shader.use();
+
+        SetViewMatrix(shader);
+        SetProjectionMatrix(shader, screenWidth, screenHeight);
+        shader.setVec3("viewPos", Position);
+    }
+
 private:
     // calculates the front vector from the Camera's (updated) Euler Angles
     void updateCameraVectors()
@@ -137,6 +140,28 @@ private:
         // also re-calculate the Right and Up vector
         Right = glm::normalize(glm::cross(Front, WorldUp));  // normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
         Up    = glm::normalize(glm::cross(Right, Front));
+    }
+
+
+    // returns the view matrix calculated using Euler Angles and the LookAt Matrix
+    glm::mat4 GetViewMatrix()
+    {
+        return glm::lookAt(Position, Position + Front, Up);
+    }
+
+    void SetViewMatrix(Shader& shader)
+    {
+        shader.setMat4("view", GetViewMatrix());
+    }
+
+    glm::mat4 GetProjectionMatrix(float screenWidth, float screenHeight)
+    {
+        return glm::perspective(glm::radians(Zoom), (float)screenWidth / (float)screenHeight, 0.1f, 100.0f);
+    }
+
+    void SetProjectionMatrix(Shader& shader, float screenWidth, float screenHeight)
+    {
+        shader.setMat4("projection", GetProjectionMatrix(screenWidth, screenHeight));
     }
 };
 #endif

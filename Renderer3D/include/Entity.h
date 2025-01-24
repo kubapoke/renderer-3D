@@ -9,7 +9,7 @@
 
 class Entity {
 public:
-    explicit Entity(std::unique_ptr<Renderable> renderable,
+    explicit Entity(std::shared_ptr<Renderable> renderable,
                     glm::vec3 position = glm::vec3(0.0f),
                     glm::vec3 rotation = glm::vec3(0.0f),
                     glm::vec3 scale = glm::vec3(1.0f))
@@ -39,7 +39,7 @@ protected:
     }
 
 private:
-    std::unique_ptr<Renderable> renderable;
+    std::shared_ptr<Renderable> renderable;
     glm::vec3 position;
     glm::vec3 rotation;
     glm::vec3 scale;
