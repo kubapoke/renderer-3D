@@ -10,8 +10,9 @@
 #include "assimp/scene.h"
 #include "assimp/postprocess.h"
 
-#include <Mesh.h>
+#include "Mesh.h"
 #include "Shader.h"
+#include "Renderable.h"
 
 #include <string>
 #include <fstream>
@@ -23,7 +24,7 @@ using namespace std;
 
 unsigned int TextureFromFile(const char *path, const string &directory, bool gamma = false);
 
-class Model
+class Model : public Renderable
 {
 public:
     // model data
