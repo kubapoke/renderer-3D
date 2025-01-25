@@ -264,6 +264,85 @@ public:
 
         return Shape(Mesh(vertices, indices, textures));
     }
+
+    static Shape GetSphere(const string& diffusePath = "",
+                           const string& specularPath = "",
+                           const string& normalPath = "",
+                           const string& heightPath = "",
+                           float radius = 1.0f,
+                           unsigned int sectorCount = 36,
+                           unsigned int stackCount = 18)
+    {
+        std::vector<Vertex> vertices;
+        std::vector<unsigned int> indices;
+        std::vector<Texture> textures;
+
+        float x, y, z, xy;                      // Vertex position
+        float nx, ny, nz, lengthInv = 1.0f / radius; // Normalized components
+        float s, t;                             // Texture coordinates
+
+        float sectorStep = 2 * M_PI / sectorCount; // Angle step for sectors
+        float stackStep = M_PI / stackCount;      // Angle step for stacks
+        float sectorAngle, stackAngle;
+
+        // Generate vertices
+        for (unsigned int i = 0; i <= stackCount; ++i) {
+            stackAngle = M_PI / 2 - i * stackStep; // From pi/2 to -pi/2
+            xy = radius * cosf(stackAngle);       // r * cos(u)
+            z = radius * sinf(stackAngle);        // r * sin(u)
+
+            // Add (sectorCount+1) vertices per stack
+            // The first and last vertices are duplicated to form a full circle
+            for (unsigned int j = 0; j <= sectorCount; ++j) {
+                sectorAngle = j * sectorStep;     // 0 to 2pi
+
+                // Vertex position (x, y, z)
+                x = xy * cosf(sectorAngle);
+                y = xy * sinf(sectorAngle);
+                glm::vec3 position = {x, y, z};
+
+                // Normal (nx, ny, nz)
+                nx = x * lengthInv;
+                ny = y * lengthInv;
+                nz = z * lengthInv;
+                glm::vec3 normal = {nx, ny, nz};
+
+                // Texture coordinates (s, t)
+                s = (float)j / sectorCount;
+                t = (float)i / stackCount;
+
+                vertices.push_back({position, normal, {s, t}});
+            }
+        }
+
+        // Generate indices
+        unsigned int k1, k2;
+        for (unsigned int i = 0; i < stackCount; ++i) {
+            k1 = i * (sectorCount + 1); // Beginning of current stack
+            k2 = k1 + sectorCount + 1;  // Beginning of next stack
+
+            for (unsigned int j = 0; j < sectorCount; ++j, ++k1, ++k2) {
+                // 2 triangles per sector
+                if (i != 0) {
+                    // Top triangle
+                    indices.push_back(k1);
+                    indices.push_back(k2);
+                    indices.push_back(k1 + 1);
+                }
+
+                if (i != (stackCount - 1)) {
+                    // Bottom triangle
+                    indices.push_back(k1 + 1);
+                    indices.push_back(k2);
+                    indices.push_back(k2 + 1);
+                }
+            }
+        }
+
+        textures = GetTextures(diffusePath, specularPath, normalPath, heightPath);
+
+        return Shape(Mesh(vertices, indices, textures));
+    }
 };
 
 #endif //RENDERER3D_SHAPE_H

@@ -51,11 +51,11 @@ int main() {
     shared_ptr<Renderable> crabSpaceshipRenderable = std::make_shared<Model>("assets/models/spaceship_eav_2_crab/scene.gltf");
     auto crabSpaceship = Entity(crabSpaceshipRenderable, glm::vec3(0.0f, 2.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.05f));
 
-    shared_ptr<Renderable> cubeRenderable = std::make_shared<Shape>(Shape::GetCube(
-            "assets/textures/container/diffuse.png",
-            "assets/textures/container/specular.png"
+    shared_ptr<Renderable> sphereRenderable = std::make_shared<Shape>(Shape::GetSphere(
+            "assets/textures/gold/diffuse.png",
+            "assets/textures/gold/specular.png"
     ));
-    auto cube = Entity(cubeRenderable, glm::vec3(0.0f, 0.5f, 0.0f));
+    auto sphere = Entity(sphereRenderable, glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(3.5f));
 
     shared_ptr<Renderable> planeRenderable = std::make_shared<Shape>(Shape::GetPlane(
             "assets/textures/redstone/diffuse.png",
@@ -66,7 +66,7 @@ int main() {
 
     // set up lights
 
-    auto light = PointLight(glm::vec3(0.5f, 3.0f, 1.0f), glm::vec3(0.05f));
+    auto light = PointLight(glm::vec3(0.5f, 4.0f, 1.5f), glm::vec3(0.05f));
 
     // render loop
     while (!glfwWindowShouldClose(window))
@@ -89,14 +89,14 @@ int main() {
         baseShader.setFloat("material.shininess", 32.0f);
 
         float radius = 8.0f;
-        crabSpaceship.SetPosition(glm::vec3(glm::sin(glfwGetTime()) * radius, 2.0, glm::cos(glfwGetTime()) * radius));
-        crabSpaceship.SetRotation(glm::vec3 (0.0f, glfwGetTime(), 0.0f));
+        crabSpaceship.SetPosition(glm::vec3(glm::sin(glfwGetTime() / 2.0f) * radius, 2.0f + 0.3f * glm::cos(glfwGetTime() * 4.0f), glm::cos(glfwGetTime() / 2.0f) * radius));
+        crabSpaceship.SetRotation(glm::vec3 (0.0f, glfwGetTime() / 2.0f, 0.0f));
 
-        // camera.SetTarget(glm::vec3(glm::sin(glfwGetTime()) * radius, 2.0, glm::cos(glfwGetTime()) * radius));
+        // camera.SetTarget(glm::vec3(glm::sin(glfwGetTime() / 2.0f) * radius, 2.0, glm::cos(glfwGetTime() / 2.0f) * radius));
         // camera.SetPosition(glm::vec3(0.5f, 3.0f, 1.0f));
 
         crabSpaceship.Draw(baseShader);
-        cube.Draw(baseShader);
+        sphere.Draw(baseShader);
         plane.Draw(baseShader);
 
         // swap buffers and poll IO events
