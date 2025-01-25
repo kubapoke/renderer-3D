@@ -55,12 +55,16 @@ const float MAX_REFLECTOR_PITCH_OFFSET = 60.0f;
 const float MAX_REFLECTOR_YAW_OFFSET = 45.0f;
 const float MIN_REFLECTOR_PITCH_OFFSET = -25.0f;
 const float MIN_REFLECTOR_YAW_OFFSET = -45.0f;
+const float MAX_FOG_MAX_DIST = 50.0f;
+const float MIN_FOG_MAX_DIST = 5.0f;
+const float FOG_LIGHT_MULT = 2.0f;
 
 // global variables
 glm::vec3 skyColor = glm::vec3(0.57f, 0.53f, 0.35f);
 CameraMode camMode = CameraMode::Controlled;
 float reflectorPitchOffset = 0.0f;
 float reflectorYawOffset = 0.0f;
+float fogMaxDist = 35.0f;
 
 // camera
 Camera camera(glm::vec3(0.0f, 5.0f, 12.0f));
@@ -185,6 +189,12 @@ void processInput(GLFWwindow *window)
         reflectorYawOffset += reflectorMoveSpeed;
     if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS && reflectorYawOffset > MIN_REFLECTOR_YAW_OFFSET)
         reflectorYawOffset -= reflectorMoveSpeed;
+
+    const float fogChangeSpeed = 0.1f;
+    if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS && fogMaxDist < MAX_FOG_MAX_DIST)
+        fogMaxDist += fogChangeSpeed;
+    if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS && fogMaxDist > MIN_FOG_MAX_DIST)
+        fogMaxDist -= fogChangeSpeed;
 }
 
 // whenever the mouse moves, this callback is called
@@ -387,6 +397,6 @@ void makeFog()
     baseShader->setFloat("fog.minDist", 0.1f);
     lightSourceShader->setFloat("fog.minDist", 0.1f);
 
-    baseShader->setFloat("fog.maxDist", 35.0f);
-    lightSourceShader->setFloat("fog.maxDist", 35.0f);
+    baseShader->setFloat("fog.maxDist", fogMaxDist);
+    lightSourceShader->setFloat("fog.maxDist", fogMaxDist * FOG_LIGHT_MULT);
 }
