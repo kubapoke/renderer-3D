@@ -195,6 +195,15 @@ void processInput(GLFWwindow *window)
         fogMaxDist += fogChangeSpeed;
     if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS && fogMaxDist > MIN_FOG_MAX_DIST)
         fogMaxDist -= fogChangeSpeed;
+
+    if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS)
+    {
+        baseShader->setBool("useBlinn", true);
+    }
+    if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS)
+    {
+        baseShader->setBool("useBlinn", false);
+    }
 }
 
 // whenever the mouse moves, this callback is called
@@ -269,6 +278,8 @@ void setupShaders()
 {
     baseShader = std::make_unique<Shader>("assets/shaders/BaseVertexShader.vs", "assets/shaders/BaseFragmentShader.fs");
     lightSourceShader = std::make_unique<Shader>("assets/shaders/BaseVertexShader.vs", "assets/shaders/LightSourceFragmentShader.fs");
+
+    baseShader->setBool("useBlinn", false);
 }
 
 void setupEntities()
