@@ -29,21 +29,16 @@ void setupEntities();
 void setupLights();
 
 // scene modification function declarations
-void changeTimeOfDay();
-
-// enums
-enum class TimeOfDay{
-    day,
-    night,
-};
+void setDay();
+void setNight();
 
 // global constants
 const unsigned int SCR_WIDTH = 1200;
 const unsigned int SCR_HEIGHT = 900;
+const glm::vec3 POINT_LIGHT_POSITIONS[2] = {glm::vec3(0.5f, 4.0f, 1.5f), glm::vec3(-5.0f, 1.0f, -2.5f)};
 
 // global variables
 glm::vec3 skyColor = glm::vec3(0.57f, 0.53f, 0.35f);
-TimeOfDay timeOfDay = TimeOfDay::day;
 
 // camera
 Camera camera(glm::vec3(0.0f, 5.0f, 0.0f));
@@ -52,13 +47,13 @@ float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
 
 // shaders
-std::unique_ptr<Shader> baseShader;
+std::unique_ptr<Shader> baseShader, lightSourceShader;
 
 // entities
-std::unique_ptr<Entity> crabSpaceship, plane, sphere;
+std::unique_ptr<Entity> crabSpaceship, plane, sphere, lightSpheres[2];
 
 // lights
-std::unique_ptr<PointLight> pointLight;
+std::unique_ptr<PointLight> pointLight[2];
 std::unique_ptr<DirectionalLight> dirLight;
 
 // timing
@@ -97,10 +92,16 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         camera.UpdateShader(*baseShader, SCR_WIDTH, SCR_HEIGHT);
-        pointLight->UpdateShader(*baseShader);
+
+        for(const auto & l : pointLight)
+        {
+            l->UpdateShader(*baseShader);
+        }
         dirLight->UpdateShader(*baseShader);
 
         baseShader->setFloat("material.shininess", 32.0f);
+
+        camera.UpdateShader(*lightSourceShader, SCR_WIDTH, SCR_HEIGHT);
 
         float radius = 8.0f;
         crabSpaceship->SetPosition(glm::vec3(glm::sin(glfwGetTime() / 2.0f) * radius, 2.0f + 0.3f * glm::cos(glfwGetTime() * 4.0f), glm::cos(glfwGetTime() / 2.0f) * radius));
@@ -112,6 +113,10 @@ int main() {
         crabSpaceship->Draw(*baseShader);
         sphere->Draw(*baseShader);
         plane->Draw(*baseShader);
+        for(const auto & lightSphere : lightSpheres)
+        {
+            lightSphere->Draw(*lightSourceShader);
+        }
 
         // swap buffers and poll IO events
         glfwSwapBuffers(window);
@@ -144,7 +149,9 @@ void processInput(GLFWwindow *window)
         camera.ProcessKeyboard(RIGHT, deltaTime);
 
     if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
-        changeTimeOfDay();
+        setDay();
+    if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
+        setNight();
 }
 
 // whenever the mouse moves, this callback is called
@@ -214,6 +221,7 @@ GLFWwindow *initialize_window() {
 void setupShaders()
 {
     baseShader = std::make_unique<Shader>("assets/shaders/BaseVertexShader.vs", "assets/shaders/BaseFragmentShader.fs");
+    lightSourceShader = std::make_unique<Shader>("assets/shaders/BaseVertexShader.vs", "assets/shaders/LightSourceFragmentShader.fs");
 }
 
 void setupEntities()
@@ -233,31 +241,37 @@ void setupEntities()
             "assets/textures/redstone/normal.png"
     ));
     plane = std::make_unique<Entity>(planeRenderable, glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1000.f));
+
+    shared_ptr<Renderable> lightSphereRenderable = std::make_shared<Shape>(Shape::GetSphere());
+    for(int i = 0; i < 2; i++)
+    {
+        lightSpheres[i] = std::make_unique<Entity>(lightSphereRenderable, POINT_LIGHT_POSITIONS[i], glm::vec3 (0.0f), glm::vec3(0.2f));
+    }
 }
 
 void setupLights()
 {
-    pointLight = std::make_unique<PointLight>(glm::vec3(0.5f, 4.0f, 1.5f), glm::vec3(0.0f));
+    for(int i = 0; i < 2; i++)
+    {
+        pointLight[i] = std::make_unique<PointLight>(i, POINT_LIGHT_POSITIONS[i]);
+    }
     dirLight = std::make_unique<DirectionalLight>(glm::vec3(-0.2f, -1.0f, -0.3f));
 }
 
-void changeTimeOfDay() {
-    if(timeOfDay == TimeOfDay::day)
-    {
-        timeOfDay = TimeOfDay::night;
-        skyColor = glm::vec3(0.16f, 0.15f, 0.12f);
+void setNight()
+{
+    skyColor = glm::vec3(0.16f, 0.15f, 0.12f);
 
-        dirLight->SetAmbient(glm::vec3(0.0125f));
-        dirLight->SetDiffuse(glm::vec3(0.1f));
-        dirLight->SetSpecular(glm::vec3(0.125f));
-    }
-    else
-    {
-        timeOfDay = TimeOfDay::day;
-        skyColor = glm::vec3(0.57f, 0.53f, 0.35f);
+    dirLight->SetAmbient(glm::vec3(0.0125f));
+    dirLight->SetDiffuse(glm::vec3(0.1f));
+    dirLight->SetSpecular(glm::vec3(0.125f));
+}
 
-        dirLight->SetAmbient(glm::vec3(0.05f));
-        dirLight->SetDiffuse(glm::vec3(0.4f));
-        dirLight->SetSpecular(glm::vec3(0.5f));
-    }
+void setDay()
+{
+    skyColor = glm::vec3(0.57f, 0.53f, 0.35f);
+
+    dirLight->SetAmbient(glm::vec3(0.05f));
+    dirLight->SetDiffuse(glm::vec3(0.4f));
+    dirLight->SetSpecular(glm::vec3(0.5f));
 }

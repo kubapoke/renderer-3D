@@ -18,6 +18,8 @@ public:
     virtual ~Entity() = default;
 
     void Draw(Shader& shader) {
+        shader.use();
+
         shader.setMat4("model", GenerateModelMatrix());
         renderable->Draw(shader);
     }

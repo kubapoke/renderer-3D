@@ -6,7 +6,10 @@
 class Light{
 public:
     Light(glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular)
-    : ambient(ambient), diffuse(diffuse), specular(specular) {}
+            : ambient(ambient), diffuse(diffuse), specular(specular) {}
+
+    Light(int id, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular)
+            : id(id), ambient(ambient), diffuse(diffuse), specular(specular) {}
 
     virtual void UpdateShader(Shader& shader) = 0;
 
@@ -14,6 +17,7 @@ public:
     void SetDiffuse(glm::vec3 dif) { diffuse = dif; }
     void SetSpecular(glm::vec3 spe) { specular = spe; }
 protected:
+    int id = -1;
     glm::vec3 ambient;
     glm::vec3 diffuse;
     glm::vec3 specular;

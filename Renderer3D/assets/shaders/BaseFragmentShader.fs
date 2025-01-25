@@ -27,6 +27,8 @@ struct DirLight {
     vec3 specular;
 };
 
+#define NR_POINT_LIGHTS 2
+
 in VS_OUT{
     vec3 FragPos;
     vec3 Normal;
@@ -35,7 +37,7 @@ in VS_OUT{
 
 uniform vec3 viewPos;
 uniform Material material;
-uniform PointLight pointLight;
+uniform PointLight pointLights[NR_POINT_LIGHTS];
 uniform DirLight dirLight;
 
 // function prototypes
@@ -50,7 +52,8 @@ void main()
 
     vec3 result = CalcDirLight(dirLight, norm, viewDir);
 
-    result += CalcPointLight(pointLight, norm, fs_in.FragPos, viewDir);
+    for(int i = 0; i < NR_POINT_LIGHTS; i++)
+        result += CalcPointLight(pointLights[i], norm, fs_in.FragPos, viewDir);
 
     FragColor = vec4(result, 1.0);
 }
