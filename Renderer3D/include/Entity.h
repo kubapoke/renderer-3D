@@ -29,7 +29,12 @@ public:
     void SetRotation(const glm::vec3& rot) { rotation = rot; }
     void SetScale(const glm::vec3& scl) { scale = scl; }
 
-protected:
+    glm::vec3 GetPosition() const {
+        glm::vec4 pos = glm::vec4(glm::vec3(0.0f), 1.0f);
+
+        return glm::vec3(GenerateModelMatrix() * pos);
+    }
+
     glm::mat4 GenerateModelMatrix() const {
         auto model = glm::mat4(1.0f);
         model = glm::translate(model, position);

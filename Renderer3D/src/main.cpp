@@ -31,6 +31,15 @@ void setupLights();
 // scene modification function declarations
 void setDay();
 void setNight();
+void setupCamera();
+
+// enums
+enum class CameraMode{
+    Controlled,
+    Stationary,
+    Tracking,
+    Following,
+};
 
 // global constants
 const unsigned int SCR_WIDTH = 1200;
@@ -39,6 +48,7 @@ const glm::vec3 POINT_LIGHT_POSITIONS[2] = {glm::vec3(0.5f, 4.0f, 1.5f), glm::ve
 
 // global variables
 glm::vec3 skyColor = glm::vec3(0.57f, 0.53f, 0.35f);
+CameraMode camMode = CameraMode::Controlled;
 
 // camera
 Camera camera(glm::vec3(0.0f, 5.0f, 0.0f));
@@ -91,7 +101,7 @@ int main() {
         glClearColor(skyColor.x, skyColor.y, skyColor.z, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        camera.UpdateShader(*baseShader, SCR_WIDTH, SCR_HEIGHT);
+        setupCamera();
 
         for(const auto & l : pointLight)
         {
@@ -99,16 +109,12 @@ int main() {
         }
         dirLight->UpdateShader(*baseShader);
 
+        baseShader->use();
         baseShader->setFloat("material.shininess", 32.0f);
 
-        camera.UpdateShader(*lightSourceShader, SCR_WIDTH, SCR_HEIGHT);
-
-        float radius = 8.0f;
+        float radius = 6.5f;
         crabSpaceship->SetPosition(glm::vec3(glm::sin(glfwGetTime() / 2.0f) * radius, 2.0f + 0.3f * glm::cos(glfwGetTime() * 4.0f), glm::cos(glfwGetTime() / 2.0f) * radius));
         crabSpaceship->SetRotation(glm::vec3 (0.0f, glfwGetTime() / 2.0f, 0.0f));
-
-        // camera.SetTarget(glm::vec3(glm::sin(glfwGetTime() / 2.0f) * radius, 2.0, glm::cos(glfwGetTime() / 2.0f) * radius));
-        // camera.SetPosition(glm::vec3(0.5f, 3.0f, 1.0f));
 
         crabSpaceship->Draw(*baseShader);
         sphere->Draw(*baseShader);
@@ -139,24 +145,37 @@ void processInput(GLFWwindow *window)
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        camera.ProcessKeyboard(FORWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        camera.ProcessKeyboard(BACKWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        camera.ProcessKeyboard(LEFT, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        camera.ProcessKeyboard(RIGHT, deltaTime);
+    if(camMode == CameraMode::Controlled)
+    {
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+            camera.ProcessKeyboard(FORWARD, deltaTime);
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+            camera.ProcessKeyboard(BACKWARD, deltaTime);
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+            camera.ProcessKeyboard(LEFT, deltaTime);
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+            camera.ProcessKeyboard(RIGHT, deltaTime);
+    }
 
     if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
         setDay();
     if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
         setNight();
+
+    if (glfwGetKey(window, GLFW_KEY_0) == GLFW_PRESS)
+        camMode = CameraMode::Controlled;
+    if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
+        camMode = CameraMode::Stationary;
+    if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
+        camMode = CameraMode::Tracking;
+    if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS)
+        camMode = CameraMode::Following;
 }
 
 // whenever the mouse moves, this callback is called
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 {
+
     float xpos = static_cast<float>(xposIn);
     float ypos = static_cast<float>(yposIn);
 
@@ -173,7 +192,10 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
     lastX = xpos;
     lastY = ypos;
 
-    camera.ProcessMouseMovement(xoffset, yoffset);
+    if(camMode == CameraMode::Controlled)
+    {
+        camera.ProcessMouseMovement(xoffset, yoffset);
+    }
 }
 
 // whenever the mouse scroll wheel scrolls, this callback is called
@@ -274,4 +296,34 @@ void setDay()
     dirLight->SetAmbient(glm::vec3(0.05f));
     dirLight->SetDiffuse(glm::vec3(0.4f));
     dirLight->SetSpecular(glm::vec3(0.5f));
+}
+
+void setupCamera(){
+    constexpr glm::vec3 StationaryCameraPosition = glm::vec3(-12.0f, 5.0f, 12.0f);
+    constexpr glm::vec3 StationaryCameraTarget = glm::vec3(0.0f);
+
+    constexpr glm::vec3 TrackingCameraPosition = glm::vec3(-3.0f, 8.0f, 3.0f);
+
+    constexpr glm::vec4 BaseVector = glm::vec4(glm::vec3(0.0f), 1.0f);
+    constexpr glm::vec3 Shift = glm::vec3(-100.0f, 40.0f, 0.0f);
+
+    switch (camMode) {
+        case CameraMode::Stationary:
+            camera.SetPosition(StationaryCameraPosition);
+            camera.SetTarget(StationaryCameraTarget);
+            break;
+        case CameraMode::Tracking:
+            camera.SetPosition(TrackingCameraPosition);
+            camera.SetTarget(crabSpaceship->GetPosition());
+            break;
+        case CameraMode::Following:
+            glm::vec3 position = glm::translate(crabSpaceship->GenerateModelMatrix(), Shift) * BaseVector;
+
+            camera.SetPosition(position);
+            camera.SetTarget(crabSpaceship->GetPosition());
+            break;
+    }
+
+    camera.UpdateShader(*baseShader, SCR_WIDTH, SCR_HEIGHT);
+    camera.UpdateShader(*lightSourceShader, SCR_WIDTH, SCR_HEIGHT);
 }
