@@ -42,6 +42,12 @@ struct SpotLight {
     vec3 specular;
 };
 
+struct Fog {
+    float maxDist;
+    float minDist;
+    vec3 color;
+};
+
 #define NR_POINT_LIGHTS 2
 
 in VS_OUT{
@@ -55,11 +61,13 @@ uniform Material material;
 uniform PointLight pointLights[NR_POINT_LIGHTS];
 uniform DirLight dirLight;
 uniform SpotLight spotLight;
+uniform Fog fog;
 
 // function prototypes
 vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir);
 vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
 vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
+vec4 CalcFog(Fog fogSettings, vec4 color);
 
 void main()
 {
@@ -74,7 +82,7 @@ void main()
 
     result += CalcSpotLight(spotLight, norm, fs_in.FragPos, viewDir);
 
-    FragColor = vec4(result, 1.0);
+    FragColor = CalcFog(fog, vec4(result, 1.0));
 }
 
 // calculates the color when using a directional light.
@@ -139,4 +147,15 @@ vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
     diffuse *= attenuation * intensity;
     specular *= attenuation * intensity;
     return (ambient + diffuse + specular);
+}
+
+vec4 CalcFog(Fog fogSettings, vec4 color)
+{
+    float distance = length(fs_in.FragPos - viewPos);
+
+    float fogFactor = clamp((distance - fogSettings.minDist) / (fogSettings.maxDist - fogSettings.minDist), 0.0, 1.0);
+
+    vec3 foggedColor = mix(color.rgb, fogSettings.color, fogFactor);
+
+    return vec4(foggedColor, color.a);
 }

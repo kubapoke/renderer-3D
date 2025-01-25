@@ -37,6 +37,7 @@ void setNight();
 void positionCamera();
 void positionSpaceship();
 void positionLights();
+void makeFog();
 
 // enums
 enum class CameraMode{
@@ -62,7 +63,7 @@ float reflectorPitchOffset = 0.0f;
 float reflectorYawOffset = 0.0f;
 
 // camera
-Camera camera(glm::vec3(0.0f, 5.0f, 0.0f));
+Camera camera(glm::vec3(0.0f, 5.0f, 12.0f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -116,6 +117,7 @@ int main() {
         positionSpaceship();
         positionCamera();
         positionLights();
+        makeFog();
 
         baseShader->setFloat("material.shininess", 32.0f);
 
@@ -377,3 +379,14 @@ void positionLights() {
     spotLight->UpdateShader(*baseShader);
 }
 
+void makeFog()
+{
+    baseShader->setVec3("fog.color", skyColor);
+    lightSourceShader->setVec3("fog.color", skyColor);
+
+    baseShader->setFloat("fog.minDist", 0.1f);
+    lightSourceShader->setFloat("fog.minDist", 0.1f);
+
+    baseShader->setFloat("fog.maxDist", 35.0f);
+    lightSourceShader->setFloat("fog.maxDist", 35.0f);
+}
