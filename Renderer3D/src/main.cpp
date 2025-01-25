@@ -8,6 +8,7 @@
 #include "Light.h"
 #include "Model.h"
 #include "PointLight.h"
+#include "DirectionalLight.h"
 #include "Shape.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -27,7 +28,7 @@ const unsigned int SCR_WIDTH = 1200;
 const unsigned int SCR_HEIGHT = 900;
 
 // camera
-Camera camera(glm::vec3(0.0f, 0.0f, 0.0f));
+Camera camera(glm::vec3(0.0f, 5.0f, 0.0f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -66,7 +67,8 @@ int main() {
 
     // set up lights
 
-    auto light = PointLight(glm::vec3(0.5f, 4.0f, 1.5f), glm::vec3(0.05f));
+    auto pointLight = PointLight(glm::vec3(0.5f, 4.0f, 1.5f), glm::vec3(0.0f));
+    auto dirLight = DirectionalLight(glm::vec3(-0.2f, -1.0f, -0.3f));
 
     // render loop
     while (!glfwWindowShouldClose(window))
@@ -80,11 +82,12 @@ int main() {
         processInput(window);
 
         // render
-        glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
+        glClearColor(0.57f, 0.53f, 0.35f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         camera.UpdateShader(baseShader, SCR_WIDTH, SCR_HEIGHT);
-        light.UpdateShader(baseShader);
+        pointLight.UpdateShader(baseShader);
+        dirLight.UpdateShader(baseShader);
 
         baseShader.setFloat("material.shininess", 32.0f);
 
