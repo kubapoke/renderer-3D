@@ -22,6 +22,9 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
+void setupShaders();
+void setupEntities();
+void setupLights();
 
 // global constants
 const unsigned int SCR_WIDTH = 1200;
@@ -32,6 +35,16 @@ Camera camera(glm::vec3(0.0f, 5.0f, 0.0f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
+
+// shaders
+std::unique_ptr<Shader> baseShader;
+
+// entities
+std::unique_ptr<Entity> crabSpaceship, plane, sphere;
+
+// lights
+std::unique_ptr<PointLight> pointLight;
+std::unique_ptr<DirectionalLight> dirLight;
 
 // timing
 float deltaTime = 0.0f;
@@ -44,31 +57,14 @@ int main() {
     if(window == nullptr)
         return -1;
 
-    // temp: set up our only shader
-    Shader baseShader("assets/shaders/BaseVertexShader.vs", "assets/shaders/BaseFragmentShader.fs");
+    // set up shaders
+    setupShaders();
 
     // set up entities
-
-    shared_ptr<Renderable> crabSpaceshipRenderable = std::make_shared<Model>("assets/models/spaceship_eav_2_crab/scene.gltf");
-    auto crabSpaceship = Entity(crabSpaceshipRenderable, glm::vec3(0.0f, 2.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.05f));
-
-    shared_ptr<Renderable> sphereRenderable = std::make_shared<Shape>(Shape::GetSphere(
-            "assets/textures/gold/diffuse.png",
-            "assets/textures/gold/specular.png"
-    ));
-    auto sphere = Entity(sphereRenderable, glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(3.5f));
-
-    shared_ptr<Renderable> planeRenderable = std::make_shared<Shape>(Shape::GetPlane(
-            "assets/textures/redstone/diffuse.png",
-            "assets/textures/redstone/specular.png",
-            "assets/textures/redstone/normal.png"
-    ));
-    auto plane = Entity(planeRenderable, glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1000.f));
+    setupEntities();
 
     // set up lights
-
-    auto pointLight = PointLight(glm::vec3(0.5f, 4.0f, 1.5f), glm::vec3(0.0f));
-    auto dirLight = DirectionalLight(glm::vec3(-0.2f, -1.0f, -0.3f));
+    setupLights();
 
     // render loop
     while (!glfwWindowShouldClose(window))
@@ -85,22 +81,22 @@ int main() {
         glClearColor(0.57f, 0.53f, 0.35f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        camera.UpdateShader(baseShader, SCR_WIDTH, SCR_HEIGHT);
-        pointLight.UpdateShader(baseShader);
-        dirLight.UpdateShader(baseShader);
+        camera.UpdateShader(*baseShader, SCR_WIDTH, SCR_HEIGHT);
+        pointLight->UpdateShader(*baseShader);
+        dirLight->UpdateShader(*baseShader);
 
-        baseShader.setFloat("material.shininess", 32.0f);
+        baseShader->setFloat("material.shininess", 32.0f);
 
         float radius = 8.0f;
-        crabSpaceship.SetPosition(glm::vec3(glm::sin(glfwGetTime() / 2.0f) * radius, 2.0f + 0.3f * glm::cos(glfwGetTime() * 4.0f), glm::cos(glfwGetTime() / 2.0f) * radius));
-        crabSpaceship.SetRotation(glm::vec3 (0.0f, glfwGetTime() / 2.0f, 0.0f));
+        crabSpaceship->SetPosition(glm::vec3(glm::sin(glfwGetTime() / 2.0f) * radius, 2.0f + 0.3f * glm::cos(glfwGetTime() * 4.0f), glm::cos(glfwGetTime() / 2.0f) * radius));
+        crabSpaceship->SetRotation(glm::vec3 (0.0f, glfwGetTime() / 2.0f, 0.0f));
 
         // camera.SetTarget(glm::vec3(glm::sin(glfwGetTime() / 2.0f) * radius, 2.0, glm::cos(glfwGetTime() / 2.0f) * radius));
         // camera.SetPosition(glm::vec3(0.5f, 3.0f, 1.0f));
 
-        crabSpaceship.Draw(baseShader);
-        sphere.Draw(baseShader);
-        plane.Draw(baseShader);
+        crabSpaceship->Draw(*baseShader);
+        sphere->Draw(*baseShader);
+        plane->Draw(*baseShader);
 
         // swap buffers and poll IO events
         glfwSwapBuffers(window);
@@ -195,4 +191,34 @@ GLFWwindow *initialize_window() {
     glEnable(GL_DEPTH_TEST);
 
     return window;
+}
+
+void setupShaders()
+{
+    baseShader = std::make_unique<Shader>("assets/shaders/BaseVertexShader.vs", "assets/shaders/BaseFragmentShader.fs");
+}
+
+void setupEntities()
+{
+    shared_ptr<Renderable> crabSpaceshipRenderable = std::make_shared<Model>("assets/models/spaceship_eav_2_crab/scene.gltf");
+    crabSpaceship = std::make_unique<Entity>(crabSpaceshipRenderable, glm::vec3(0.0f, 2.0f, 0.0f), glm::vec3(0.0f), glm::vec3(0.05f));
+
+    shared_ptr<Renderable> sphereRenderable = std::make_shared<Shape>(Shape::GetSphere(
+            "assets/textures/gold/diffuse.png",
+            "assets/textures/gold/specular.png"
+    ));
+    sphere = std::make_unique<Entity>(sphereRenderable, glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(3.5f));
+
+    shared_ptr<Renderable> planeRenderable = std::make_shared<Shape>(Shape::GetPlane(
+            "assets/textures/redstone/diffuse.png",
+            "assets/textures/redstone/specular.png",
+            "assets/textures/redstone/normal.png"
+    ));
+    plane = std::make_unique<Entity>(planeRenderable, glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1000.f));
+}
+
+void setupLights()
+{
+    pointLight = std::make_unique<PointLight>(glm::vec3(0.5f, 4.0f, 1.5f), glm::vec3(0.0f));
+    dirLight = std::make_unique<DirectionalLight>(glm::vec3(-0.2f, -1.0f, -0.3f));
 }
