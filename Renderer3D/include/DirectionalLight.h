@@ -3,7 +3,7 @@
 
 #include "Light.h"
 
-class DirectionalLight : Light{
+class DirectionalLight : public Light{
 public:
     explicit DirectionalLight(glm::vec3 direction = glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3 ambient = glm::vec3(0.05f),
                               glm::vec3 diffuse = glm::vec3(0.4f), glm::vec3 specular = glm::vec3(0.5f))
@@ -20,6 +20,8 @@ public:
         shader.setVec3(name + "diffuse", diffuse);
         shader.setVec3(name + "specular", specular);
     }
+
+    void SetDirection(glm::vec3 dir) { direction = dir; }
 private:
     glm::vec3 direction;
 };

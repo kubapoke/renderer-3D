@@ -22,13 +22,28 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
+
+// setup function declarations
 void setupShaders();
 void setupEntities();
 void setupLights();
 
+// scene modification function declarations
+void changeTimeOfDay();
+
+// enums
+enum class TimeOfDay{
+    day,
+    night,
+};
+
 // global constants
 const unsigned int SCR_WIDTH = 1200;
 const unsigned int SCR_HEIGHT = 900;
+
+// global variables
+glm::vec3 skyColor = glm::vec3(0.57f, 0.53f, 0.35f);
+TimeOfDay timeOfDay = TimeOfDay::day;
 
 // camera
 Camera camera(glm::vec3(0.0f, 5.0f, 0.0f));
@@ -78,7 +93,7 @@ int main() {
         processInput(window);
 
         // render
-        glClearColor(0.57f, 0.53f, 0.35f, 1.0f);
+        glClearColor(skyColor.x, skyColor.y, skyColor.z, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         camera.UpdateShader(*baseShader, SCR_WIDTH, SCR_HEIGHT);
@@ -127,6 +142,9 @@ void processInput(GLFWwindow *window)
         camera.ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.ProcessKeyboard(RIGHT, deltaTime);
+
+    if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
+        changeTimeOfDay();
 }
 
 // whenever the mouse moves, this callback is called
@@ -221,4 +239,25 @@ void setupLights()
 {
     pointLight = std::make_unique<PointLight>(glm::vec3(0.5f, 4.0f, 1.5f), glm::vec3(0.0f));
     dirLight = std::make_unique<DirectionalLight>(glm::vec3(-0.2f, -1.0f, -0.3f));
+}
+
+void changeTimeOfDay() {
+    if(timeOfDay == TimeOfDay::day)
+    {
+        timeOfDay = TimeOfDay::night;
+        skyColor = glm::vec3(0.16f, 0.15f, 0.12f);
+
+        dirLight->SetAmbient(glm::vec3(0.0125f));
+        dirLight->SetDiffuse(glm::vec3(0.1f));
+        dirLight->SetSpecular(glm::vec3(0.125f));
+    }
+    else
+    {
+        timeOfDay = TimeOfDay::day;
+        skyColor = glm::vec3(0.57f, 0.53f, 0.35f);
+
+        dirLight->SetAmbient(glm::vec3(0.05f));
+        dirLight->SetDiffuse(glm::vec3(0.4f));
+        dirLight->SetSpecular(glm::vec3(0.5f));
+    }
 }
