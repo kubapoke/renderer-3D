@@ -336,8 +336,8 @@ void setDay()
 }
 
 void positionCamera(){
-    constexpr glm::vec3 StationaryCameraPosition = glm::vec3(-12.0f, 5.0f, 12.0f);
-    constexpr glm::vec3 StationaryCameraTarget = glm::vec3(0.0f);
+    constexpr glm::vec3 StationaryCameraPosition = glm::vec3(-4.2f, 2.0f, 8.2f);
+    constexpr glm::vec3 StationaryCameraTarget = glm::vec3(-2.5f, 1.5f, 0.0f);
 
     constexpr glm::vec3 TrackingCameraPosition = glm::vec3(-3.0f, 8.0f, 3.0f);
 
