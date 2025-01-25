@@ -30,9 +30,7 @@ public:
     void SetScale(const glm::vec3& scl) { scale = scl; }
 
     glm::vec3 GetPosition() const {
-        glm::vec4 pos = glm::vec4(glm::vec3(0.0f), 1.0f);
-
-        return glm::vec3(GenerateModelMatrix() * pos);
+        return position;
     }
 
     glm::mat4 GenerateModelMatrix() const {

@@ -10,6 +10,7 @@
 #include "PointLight.h"
 #include "DirectionalLight.h"
 #include "Shape.h"
+#include "SpotLight.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -31,7 +32,11 @@ void setupLights();
 // scene modification function declarations
 void setDay();
 void setNight();
-void setupCamera();
+
+// render loop functions
+void positionCamera();
+void positionSpaceship();
+void positionLights();
 
 // enums
 enum class CameraMode{
@@ -45,10 +50,16 @@ enum class CameraMode{
 const unsigned int SCR_WIDTH = 1200;
 const unsigned int SCR_HEIGHT = 900;
 const glm::vec3 POINT_LIGHT_POSITIONS[2] = {glm::vec3(0.5f, 4.0f, 1.5f), glm::vec3(-5.0f, 1.0f, -2.5f)};
+const float MAX_REFLECTOR_PITCH_OFFSET = 60.0f;
+const float MAX_REFLECTOR_YAW_OFFSET = 45.0f;
+const float MIN_REFLECTOR_PITCH_OFFSET = -25.0f;
+const float MIN_REFLECTOR_YAW_OFFSET = -45.0f;
 
 // global variables
 glm::vec3 skyColor = glm::vec3(0.57f, 0.53f, 0.35f);
 CameraMode camMode = CameraMode::Controlled;
+float reflectorPitchOffset = 0.0f;
+float reflectorYawOffset = 0.0f;
 
 // camera
 Camera camera(glm::vec3(0.0f, 5.0f, 0.0f));
@@ -65,6 +76,7 @@ std::unique_ptr<Entity> crabSpaceship, plane, sphere, lightSpheres[2];
 // lights
 std::unique_ptr<PointLight> pointLight[2];
 std::unique_ptr<DirectionalLight> dirLight;
+std::unique_ptr<SpotLight> spotLight;
 
 // timing
 float deltaTime = 0.0f;
@@ -101,20 +113,11 @@ int main() {
         glClearColor(skyColor.x, skyColor.y, skyColor.z, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        setupCamera();
+        positionSpaceship();
+        positionCamera();
+        positionLights();
 
-        for(const auto & l : pointLight)
-        {
-            l->UpdateShader(*baseShader);
-        }
-        dirLight->UpdateShader(*baseShader);
-
-        baseShader->use();
         baseShader->setFloat("material.shininess", 32.0f);
-
-        float radius = 6.5f;
-        crabSpaceship->SetPosition(glm::vec3(glm::sin(glfwGetTime() / 2.0f) * radius, 2.0f + 0.3f * glm::cos(glfwGetTime() * 4.0f), glm::cos(glfwGetTime() / 2.0f) * radius));
-        crabSpaceship->SetRotation(glm::vec3 (0.0f, glfwGetTime() / 2.0f, 0.0f));
 
         crabSpaceship->Draw(*baseShader);
         sphere->Draw(*baseShader);
@@ -170,6 +173,16 @@ void processInput(GLFWwindow *window)
         camMode = CameraMode::Tracking;
     if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS)
         camMode = CameraMode::Following;
+
+    const float reflectorMoveSpeed = 0.07f;
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS && reflectorPitchOffset < MAX_REFLECTOR_PITCH_OFFSET)
+        reflectorPitchOffset += reflectorMoveSpeed;
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS && reflectorPitchOffset > MIN_REFLECTOR_PITCH_OFFSET)
+        reflectorPitchOffset -= reflectorMoveSpeed;
+    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS && reflectorYawOffset < MAX_REFLECTOR_YAW_OFFSET)
+        reflectorYawOffset += reflectorMoveSpeed;
+    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS && reflectorYawOffset > MIN_REFLECTOR_YAW_OFFSET)
+        reflectorYawOffset -= reflectorMoveSpeed;
 }
 
 // whenever the mouse moves, this callback is called
@@ -278,6 +291,7 @@ void setupLights()
         pointLight[i] = std::make_unique<PointLight>(i, POINT_LIGHT_POSITIONS[i]);
     }
     dirLight = std::make_unique<DirectionalLight>(glm::vec3(-0.2f, -1.0f, -0.3f));
+    spotLight = std::make_unique<SpotLight>(glm::vec3(0.0f), glm::vec3(0.2f, -1.0f, 0.0f));
 }
 
 void setNight()
@@ -298,7 +312,7 @@ void setDay()
     dirLight->SetSpecular(glm::vec3(0.5f));
 }
 
-void setupCamera(){
+void positionCamera(){
     constexpr glm::vec3 StationaryCameraPosition = glm::vec3(-12.0f, 5.0f, 12.0f);
     constexpr glm::vec3 StationaryCameraTarget = glm::vec3(0.0f);
 
@@ -327,3 +341,39 @@ void setupCamera(){
     camera.UpdateShader(*baseShader, SCR_WIDTH, SCR_HEIGHT);
     camera.UpdateShader(*lightSourceShader, SCR_WIDTH, SCR_HEIGHT);
 }
+
+void positionSpaceship() {
+    constexpr float radius = 6.5f, rotationSpeed = 0.5f, avgHeight = 2.0f, heightOffset = 0.3f,
+    bobbingSpeed = 4.0f;
+
+    crabSpaceship->SetPosition(glm::vec3(glm::sin(glfwGetTime() * rotationSpeed) * radius, avgHeight + heightOffset
+    * glm::cos(glfwGetTime() * bobbingSpeed), glm::cos(glfwGetTime() * rotationSpeed) * radius));
+    crabSpaceship->SetRotation(glm::vec3 (0.0f, glfwGetTime() * rotationSpeed, 0.0f));
+}
+
+void positionLights() {
+    constexpr glm::vec4 BasePositionVector = glm::vec4(glm::vec3(0.0f), 1.0f);
+    constexpr glm::vec3 Shift = glm::vec3(20.0f, 0.0f, 0.0f);
+    constexpr glm::vec4 BaseRotationVector = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
+    glm::vec3 Direction = glm::vec3(0.0f, reflectorYawOffset, -65.0f + reflectorPitchOffset);
+
+    // Set spotlight position
+    glm::mat4 modelMatrix = crabSpaceship->GenerateModelMatrix();
+    glm::vec3 position = glm::vec3(glm::translate(modelMatrix, Shift) * BasePositionVector);
+    spotLight->SetPosition(position);
+
+    // Set spotlight rotation
+    modelMatrix = glm::rotate(modelMatrix, glm::radians(Direction.x), glm::vec3(1.0f, 0.0f, 0.0f));
+    modelMatrix = glm::rotate(modelMatrix, glm::radians(Direction.y), glm::vec3(0.0f, 1.0f, 0.0f));
+    modelMatrix = glm::rotate(modelMatrix, glm::radians(Direction.z), glm::vec3(0.0f, 0.0f, 1.0f));
+
+    glm::vec3 direction = glm::vec3(modelMatrix * BaseRotationVector);
+    spotLight->SetDirection(direction);
+
+    for (const auto &l : pointLight) {
+        l->UpdateShader(*baseShader);
+    }
+    dirLight->UpdateShader(*baseShader);
+    spotLight->UpdateShader(*baseShader);
+}
+

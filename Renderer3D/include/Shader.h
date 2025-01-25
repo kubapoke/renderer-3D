@@ -74,7 +74,7 @@ public:
     }
     // activate the shader
     // ------------------------------------------------------------------------
-    void use()
+    void use() const
     {
         glUseProgram(ID);
     }
@@ -82,26 +82,31 @@ public:
     // ------------------------------------------------------------------------
     void setBool(const std::string &name, bool value) const
     {
+        use();
         glUniform1i(glGetUniformLocation(ID, name.c_str()), (int)value);
     }
     // ------------------------------------------------------------------------
     void setInt(const std::string &name, int value) const
     {
+        use();
         glUniform1i(glGetUniformLocation(ID, name.c_str()), value);
     }
     // ------------------------------------------------------------------------
     void setFloat(const std::string &name, float value) const
     {
+        use();
         glUniform1f(glGetUniformLocation(ID, name.c_str()), value);
     }
     // ------------------------------------------------------------------------
     void setVec3(const std::string &name, glm::vec3 value) const
     {
+        use();
         glUniform3fv(glGetUniformLocation(ID, name.c_str()), 1, glm::value_ptr(value));
     }
     // ------------------------------------------------------------------------
     void setMat4(const std::string &name, glm::mat4 value) const
     {
+        use();
         glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, glm::value_ptr(value));
     }
 
