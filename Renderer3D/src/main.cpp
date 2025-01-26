@@ -65,6 +65,7 @@ CameraMode camMode = CameraMode::Controlled;
 float reflectorPitchOffset = 0.0f;
 float reflectorYawOffset = 0.0f;
 float fogMaxDist = 35.0f;
+bool useNorm = true;
 
 // camera
 Camera camera(glm::vec3(0.0f, 5.0f, 12.0f));
@@ -73,10 +74,10 @@ float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
 
 // shaders
-std::unique_ptr<Shader> baseShader, lightSourceShader;
+std::unique_ptr<Shader> baseShader, lightSourceShader, normalShader;
 
 // entities
-std::unique_ptr<Entity> crabSpaceship, plane, sphere, lightSpheres[2];
+std::unique_ptr<Entity> crabSpaceship, plane, sphere, lightSpheres[2], cube;
 
 // lights
 std::unique_ptr<PointLight> pointLight[2];
@@ -127,7 +128,8 @@ int main() {
 
         crabSpaceship->Draw(*baseShader);
         sphere->Draw(*baseShader);
-        plane->Draw(*baseShader);
+        plane->Draw(useNorm ? *normalShader : *baseShader);
+        cube->Draw(useNorm ? *normalShader : *baseShader);
         for(const auto & lightSphere : lightSpheres)
         {
             lightSphere->Draw(*lightSourceShader);
@@ -199,11 +201,18 @@ void processInput(GLFWwindow *window)
     if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS)
     {
         baseShader->setBool("useBlinn", true);
+        normalShader->setBool("useBlinn", true);
     }
     if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS)
     {
         baseShader->setBool("useBlinn", false);
+        normalShader->setBool("useBlinn", false);
     }
+
+    if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
+        useNorm = true;
+    if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS)
+        useNorm = false;
 }
 
 // whenever the mouse moves, this callback is called
@@ -278,8 +287,10 @@ void setupShaders()
 {
     baseShader = std::make_unique<Shader>("assets/shaders/BaseVertexShader.vs", "assets/shaders/BaseFragmentShader.fs");
     lightSourceShader = std::make_unique<Shader>("assets/shaders/BaseVertexShader.vs", "assets/shaders/LightSourceFragmentShader.fs");
+    normalShader = std::make_unique<Shader>("assets/shaders/NormalVertexShader.vs", "assets/shaders/NormalFragmentShader.fs");
 
     baseShader->setBool("useBlinn", false);
+    normalShader->setBool("useBlinn", false);
 }
 
 void setupEntities()
@@ -305,6 +316,13 @@ void setupEntities()
     {
         lightSpheres[i] = std::make_unique<Entity>(lightSphereRenderable, POINT_LIGHT_POSITIONS[i], glm::vec3 (0.0f), glm::vec3(0.2f));
     }
+
+    shared_ptr<Renderable> cubeRenderable = std::make_shared<Shape>(Shape::GetCube(
+            "assets/textures/brick/diffuse.png",
+            "assets/textures/brick/specular.png",
+            "assets/textures/brick/normal.png"
+    ));
+    cube = std::make_unique<Entity>(cubeRenderable, glm::vec3(-7.0f, 0.5f, -3.5f), glm::vec3(0.0f, glm::radians(20.0f), 0.0f));
 }
 
 void setupLights()
@@ -363,6 +381,7 @@ void positionCamera(){
 
     camera.UpdateShader(*baseShader, SCR_WIDTH, SCR_HEIGHT);
     camera.UpdateShader(*lightSourceShader, SCR_WIDTH, SCR_HEIGHT);
+    camera.UpdateShader(*normalShader, SCR_WIDTH, SCR_HEIGHT);
 }
 
 void positionSpaceship() {
@@ -395,19 +414,25 @@ void positionLights() {
 
     for (const auto &l : pointLight) {
         l->UpdateShader(*baseShader);
+        l->UpdateShader(*normalShader);
     }
     dirLight->UpdateShader(*baseShader);
+    dirLight->UpdateShader(*normalShader);
     spotLight->UpdateShader(*baseShader);
+    spotLight->UpdateShader(*normalShader);
 }
 
 void makeFog()
 {
     baseShader->setVec3("fog.color", skyColor);
     lightSourceShader->setVec3("fog.color", skyColor);
+    normalShader->setVec3("fog.color", skyColor);
 
     baseShader->setFloat("fog.minDist", 0.1f);
     lightSourceShader->setFloat("fog.minDist", 0.1f);
+    normalShader->setFloat("fog.minDist", 0.1f);
 
     baseShader->setFloat("fog.maxDist", fogMaxDist);
     lightSourceShader->setFloat("fog.maxDist", fogMaxDist * FOG_LIGHT_MULT);
+    normalShader->setFloat("fog.maxDist", fogMaxDist);
 }
