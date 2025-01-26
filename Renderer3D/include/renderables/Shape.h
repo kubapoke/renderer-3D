@@ -171,12 +171,12 @@ public:
         };
 
         glm::vec3 bitangents[] = {
-                {0.0f,  1.0f,  0.0f},  // Front
-                {0.0f,  1.0f,  0.0f},  // Back
-                {0.0f,  0.0f,  1.0f},  // Top
-                {0.0f,  0.0f, -1.0f},  // Bottom
-                {1.0f,  0.0f,  0.0f},  // Right
-                {1.0f,  0.0f,  0.0f},  // Left
+                glm::normalize(glm::cross(normals[0], tangents[0])),  // Front
+                glm::normalize(glm::cross(normals[1], tangents[1])),  // Back
+                glm::normalize(glm::cross(normals[2], tangents[2])),  // Top
+                glm::normalize(glm::cross(normals[3], tangents[3])),  // Bottom
+                glm::normalize(glm::cross(normals[4], tangents[4])),  // Right
+                glm::normalize(glm::cross(normals[5], tangents[5])),  // Left
         };
 
         for (int face = 0; face < 6; face++) {
@@ -237,7 +237,7 @@ public:
 
         // Tangent and bitangent
         glm::vec3 tangent = {1.0f, 0.0f, 0.0f};   // Along the X-axis
-        glm::vec3 bitangent = {0.0f, 0.0f, 1.0f}; // Along the Z-axis
+        glm::vec3 bitangent = glm::normalize(glm::cross(normal, tangent)); // Along the Z-axis
 
         // Populate vertices
         for (int i = 0; i < 4; i++) {
