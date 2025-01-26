@@ -5,12 +5,12 @@
 #include "Shader.h"
 #include "Camera.h"
 #include "Entity.h"
-#include "Light.h"
-#include "Model.h"
-#include "PointLight.h"
-#include "DirectionalLight.h"
-#include "Shape.h"
-#include "SpotLight.h"
+#include "lights/Light.h"
+#include "renderables/Model.h"
+#include "lights/PointLight.h"
+#include "lights/DirectionalLight.h"
+#include "renderables/Shape.h"
+#include "lights/SpotLight.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -289,8 +289,8 @@ void setupShaders()
     lightSourceShader = std::make_unique<Shader>("assets/shaders/BaseVertexShader.vs", "assets/shaders/LightSourceFragmentShader.fs");
     normalShader = std::make_unique<Shader>("assets/shaders/NormalVertexShader.vs", "assets/shaders/NormalFragmentShader.fs");
 
-    baseShader->setBool("useBlinn", false);
-    normalShader->setBool("useBlinn", false);
+    baseShader->setBool("useBlinn", true);
+    normalShader->setBool("useBlinn", true);
 }
 
 void setupEntities()
