@@ -20,9 +20,11 @@ void main()
     vs_out.FragPos = vec3(model * vec4(aPos, 1.0));
     vs_out.TexCoords = aTexCoords;
 
+    mat4 normalMatrix = transpose(inverse(model));
+
     vec3 T = normalize(vec3(model * vec4(aTangent,   0.0)));
     vec3 B = normalize(vec3(model * vec4(aBitangent, 0.0)));
-    vec3 N = normalize(vec3(model * vec4(aNormal,    0.0)));
+    vec3 N = normalize(vec3(normalMatrix * vec4(aNormal,    0.0)));
     vs_out.TBN = mat3(T, B, N);
 
     gl_Position = projection * view * vec4(vs_out.FragPos, 1.0);
