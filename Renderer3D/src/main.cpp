@@ -5,7 +5,6 @@
 #include "Shader.h"
 #include "Camera.h"
 #include "Entity.h"
-#include "lights/Light.h"
 #include "renderables/Model.h"
 #include "lights/PointLight.h"
 #include "lights/DirectionalLight.h"
@@ -13,8 +12,6 @@
 #include "lights/SpotLight.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <vector>
 #include <memory>
 
 // function declarations
@@ -38,6 +35,7 @@ void positionCamera();
 void positionSpaceship();
 void positionLights();
 void makeFog();
+void drawRenderables();
 
 // enums
 enum class CameraMode{
@@ -123,17 +121,9 @@ int main() {
         positionCamera();
         positionLights();
         makeFog();
-
         baseShader->setFloat("material.shininess", 32.0f);
 
-        crabSpaceship->Draw(*baseShader);
-        sphere->Draw(*baseShader);
-        plane->Draw(useNorm ? *normalShader : *baseShader);
-        cube->Draw(useNorm ? *normalShader : *baseShader);
-        for(const auto & lightSphere : lightSpheres)
-        {
-            lightSphere->Draw(*lightSourceShader);
-        }
+        drawRenderables();
 
         // swap buffers and poll IO events
         glfwSwapBuffers(window);
@@ -435,4 +425,16 @@ void makeFog()
     baseShader->setFloat("fog.maxDist", fogMaxDist);
     lightSourceShader->setFloat("fog.maxDist", fogMaxDist * FOG_LIGHT_MULT);
     normalShader->setFloat("fog.maxDist", fogMaxDist);
+}
+
+void drawRenderables()
+{
+    crabSpaceship->Draw(*baseShader);
+    sphere->Draw(*baseShader);
+    plane->Draw(useNorm ? *normalShader : *baseShader);
+    cube->Draw(useNorm ? *normalShader : *baseShader);
+    for(const auto & lightSphere : lightSpheres)
+    {
+        lightSphere->Draw(*lightSourceShader);
+    }
 }
