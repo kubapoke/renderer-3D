@@ -3,7 +3,7 @@
 
 #include "Renderable.h"
 #include "Mesh.h"
-#include "stb_image.h"
+#include "stb_image/stb_image.h"
 
 class Shape : public Renderable {
 public:
