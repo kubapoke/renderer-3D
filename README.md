@@ -135,3 +135,7 @@ position of the spaceship's spotlight.
 #### Exiting the application
 
 Whenever you wish to quit the application, press the ```ESC``` button.
+
+All textures in the project are sourced from the
+[Poly Haven](https://polyhaven.com/) website. The spaceship model used
+comes from [Ilya Shevchuck on SketchFab](https://sketchfab.com/3d-models/spaceship-eav-2-crab-f4bfa996007e4a6fbd0f31fa807230ce).
